@@ -6,9 +6,9 @@
 
 typedef std::vector<char> data_t;
 
-const data_t content ();
+const data_t dl_content ();
 
-int http_dl (const std::string& url/*, data_t& data*/);
+int file_dl (const std::string& url);
 
 #endif
 

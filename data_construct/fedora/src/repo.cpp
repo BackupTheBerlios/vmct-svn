@@ -26,6 +26,8 @@ Repo::Repo (const std::string& file) {
 			if (!url.length ()) {
 				url = getBaseUrl (ini.GetValue (i->pItem, "mirrorlist"));
 				std::cout << url << std::endl;
+				file_dl (url);
+				std::cout << dl_content ().data () << std::endl;
 			}
 		}
 	}
@@ -48,11 +50,9 @@ xmlNode* getFirstUrl(xmlNode * a_node) {
 std::string Repo::getBaseUrl (const std::string& mirrorlist) {
 	std::string url;
 	
-	data_t data;
-	http_dl (mirrorlist/*, data*/);
-	data = content ();
+	file_dl (mirrorlist);
 
-	xmlDocPtr doc = xmlReadMemory(&data[0], data.size (), "noname.xml", NULL, 0);
+	xmlDocPtr doc = xmlReadMemory(/*&data[0]*/&*dl_content ().begin (), dl_content ().size (), "noname.xml", NULL, 0);
 	if (!doc) {
 		return url;
 	}
