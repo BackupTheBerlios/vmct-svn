@@ -1,72 +1,123 @@
 #include <iostream>
-#include <libxml/parser.h>
-#include <libxml/tree.h>
+#include <string.h>
+#include <algorithm>
 
+#include "func.h"
 #include "repo.h"
 #include "dl.h"
+#include "err.h"
 #include "SimpleIni.h"
 
 typedef CSimpleIniA::TNamesDepend sections_t;
 typedef CSimpleIniA::TNamesDepend keys_t;
 
-Repo::Repo (const std::string& file) {
+static const char* data_tags [] =
+{
+        "filelists",
+        "primary",
+        "group",
+};
+
+static const int data_tag_count = sizeof (data_tags)/sizeof(const char*);
+
+int check (const char* type) {
+        for (int i = 0; i < data_tag_count; i++) {
+                if (strncmp (type, data_tags[i], strlen (data_tags[i])) == 0) return i;
+        }
+        return -1;
+}
+
+Repo::Repo () {}
+
+// process a .repo file
+RepoFile::RepoFile (const std::string& file) {
 	CSimpleIniA ini;
 	ini.LoadFile (file.c_str ());
 	sections_t section;
 	ini.GetAllSections (section);
 	std::string url;
+
+	// for each [repo] section
 	for (sections_t::iterator i = section.begin (); i != section.end (); i++) {
 		std::cout << i->pItem << std::endl;
 		if (ini.GetValue (i->pItem, "enabled")[0] == '1') {
 			keys_t key;
 			ini.GetAllKeys (i->pItem, key);
 			for (keys_t::iterator j = key.begin (); j != key.end (); j++) {
-				if (std::string ("baseurl").compare (j->pItem) == 0) url = ini.GetValue (i->pItem, "baseurl");
+				if (strncmp ("baseurl", j->pItem, 7) == 0) url = ini.GetValue (i->pItem, "baseurl");
 			}
 			if (!url.length ()) {
-				url = getBaseUrl (ini.GetValue (i->pItem, "mirrorlist"));
-				std::cout << url << std::endl;
-				file_dl (url);
-				std::cout << dl_content ().data () << std::endl;
+				Repo repo_;
+				if (repo_.processRepo (getBaseUrl (ini.GetValue (i->pItem, "mirrorlist"))) == 0) repo.push_back (repo_);
 			}
 		}
 	}
 }
 
-xmlNode* getFirstUrl(xmlNode * a_node) {
-	xmlNode *cur_node = NULL;
-	std::string name;
-	xmlNode* ret;
-	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
-		name = (const char*)cur_node->name;
-		if (name.compare ("url") == 0) return cur_node;
-		ret = getFirstUrl (cur_node->children);
-		if (ret) return ret;
-	}
-	return NULL;	
-}
+// download and process repomd.xml
+int Repo::processRepo (const std::string& repomd) {
+	this->repomd = repomd;
+	std::cout << repomd << std::endl;
+	file_dl (repomd);
 
-
-std::string Repo::getBaseUrl (const std::string& mirrorlist) {
-	std::string url;
-	
-	file_dl (mirrorlist);
-
-	xmlDocPtr doc = xmlReadMemory(/*&data[0]*/&*dl_content ().begin (), dl_content ().size (), "noname.xml", NULL, 0);
+	xmlDocPtr doc = xmlReadMemory(&*dl_content ().begin (), dl_content ().size (), "noname.xml", NULL, 0);
 	if (!doc) {
-		return url;
+		return E_XML;
 	}
 
-	xmlNode *el = getFirstUrl (xmlDocGetRootElement(doc));
-	if (el) {
+	this->data.resize (data_tag_count);
+
+	xmlNode *el = xmlDocGetRootElement(doc);
+	if (el && strncmp ((const char*)el->name, "repomd", 6) == 0) {
 		el = el->children;
-		if (el && el->content) {
-			url = (const char*)el->content;
+		while (el) {
+			if (strncmp ((const char*)el->name, "data", 4) == 0) {
+				processDataTag (el);
+			}
+			el = el->next;
 		}
+	} else {
+		xmlFreeDoc(doc);
+		std::cout << "err";
+		return E_XML;
 	}
 
 	xmlFreeDoc(doc);
+	return E_OK;
+}
 
-	return url;
+// extract information from <data>-tags
+int Repo::processDataTag (xmlNode* el) {
+	const char* type = (const char*)xmlGetProp (el, (const xmlChar*)"type");
+
+	int idx = check (type);
+	if (idx == -1) return E_NONE;
+	
+	this->data[idx] = processDataTag_ (el, type);
+
+	return E_OK;
+}
+
+std::vector<char> Repo::processDataTag_ (xmlNode* el, const char* name) {
+        xmlNode* local = el;
+	size_t len = strlen (name);
+
+        local = local->children;
+        while (local) {
+	        if (strncmp ((const char*)local->name, "location", 8) == 0) break;
+                local = local->next;
+	}
+	if (local) {
+	        std::string url = repomd;
+	        url.resize (url.length () - 19);
+	        url.append ((const char*)xmlGetProp (local, (const xmlChar*)"href"));
+		if ( strncmp (".xml.gz", std::string (url.end () - 7, url.end ()).c_str (), 7) == 0 ) {
+			std::cout << "process " << url << std::endl;
+//			file_dl (url);
+			return dl_content ();
+		}
+        }
+
+        return std::vector<char> ();
 }
 

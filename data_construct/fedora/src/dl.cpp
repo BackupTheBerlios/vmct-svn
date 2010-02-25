@@ -25,6 +25,8 @@ int file_dl (const std::string& url) {
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
 
+	data.resize (0);
+
 	if (curl) {
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, NULL);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, dl);

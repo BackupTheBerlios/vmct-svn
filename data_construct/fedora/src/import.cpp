@@ -24,10 +24,9 @@ int main (int argc, char** argv) {
 		return -1;
 	}
 
-	Repo repo (file);
+	RepoFile repo (file);
+	std::cout << repo.repo.size () << std::endl;
 	
-//	data_t data;
-//	http_dl ("http://ya.ru", data);
 	return 0;
 }
  

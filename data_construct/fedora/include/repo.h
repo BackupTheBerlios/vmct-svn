@@ -2,12 +2,29 @@
 #define REPO_H
 
 #include <string>
+#include <vector>
+#include <libxml/parser.h>
+#include <libxml/tree.h>
 
 class Repo {
-	std::string getBaseUrl (const std::string& mirrorlist);
+	int processRepo (const std::string& repomd);
+	int processDataTag (xmlNode* el);
+	std::vector<char> processDataTag_ (xmlNode* el, const char* name);
+
+	std::string repomd;
+	std::vector<std::vector<char> > data;
+
+	friend class RepoFile;
 public:
-	Repo (const std::string& file);
+	Repo ();
 };
+
+class RepoFile {
+public:
+	RepoFile (const std::string& file);
+	std::vector<Repo> repo;
+};
+
 
 #endif
 
