@@ -1,4 +1,5 @@
 #include <string.h>
+#include <algorithm>
 #include "func.h"
 #include "dl.h"
 
@@ -37,4 +38,12 @@ std::string getBaseUrl (const std::string& mirrorlist) {
 
         return url;
 }
+
+/*std::string basename (const std::string& url) {
+        std::string name;
+        ssize_t it = url.find_last_of ('/');
+        if (it != std::string::npos) name.assign (url.begin () + it + 1, url.end ());
+        else return url;
+        return name;
+}*/
 

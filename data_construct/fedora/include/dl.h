@@ -10,5 +10,7 @@ const data_t dl_content ();
 
 int file_dl (const std::string& url);
 
+std::string dl_unpack (const std::string& url);
+
 #endif
 

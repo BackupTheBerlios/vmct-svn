@@ -1,6 +1,6 @@
 #!/bin/sh
 
 autoreconf --install
-./configure
+./configure --with-log
 make
 

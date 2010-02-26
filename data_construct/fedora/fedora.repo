@@ -3,6 +3,7 @@ name=Fedora $releasever - $basearch
 failovermethod=priority
 #baseurl=http://download.fedoraproject.org/pub/fedora/linux/releases/$releasever/Everything/$basearch/os/
 mirrorlist=https://mirrors.fedoraproject.org/metalink?repo=fedora-12&arch=i386
+baseurl=http://127.0.0.1
 #mirrorlist=http://ya.ru
 enabled=1
 metadata_expire=7d

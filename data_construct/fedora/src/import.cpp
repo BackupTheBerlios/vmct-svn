@@ -1,11 +1,10 @@
-#include "dl.h"
-#include "repo.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
 #include <iostream>
+#include "dl.h"
+#include "repo.h"
 
 int main (int argc, char** argv) {
 	std::string file;

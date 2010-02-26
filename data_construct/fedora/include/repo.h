@@ -9,10 +9,13 @@
 class Repo {
 	int processRepo (const std::string& repomd);
 	int processDataTag (xmlNode* el);
-	std::vector<char> processDataTag_ (xmlNode* el, const char* name);
+	std::string processDataTag_ (xmlNode* el, const char* name);
+
+	void processFileList ();
+	void processPrimary ();
 
 	std::string repomd;
-	std::vector<std::vector<char> > data;
+	std::vector<std::string> files;
 
 	friend class RepoFile;
 public:

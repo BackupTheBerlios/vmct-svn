@@ -10,5 +10,7 @@ xmlNode* getFirstUrl(xmlNode * a_node);
 
 std::string getBaseUrl (const std::string& mirrorlist);
 
+//std::string basename (const std::string& url);
+
 #endif 
 

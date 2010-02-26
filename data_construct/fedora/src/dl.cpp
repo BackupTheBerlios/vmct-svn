@@ -1,15 +1,17 @@
+#include <iostream>
+#include <fstream>
 #include <curl/curl.h>
 #include <err.h>
 #include <string.h>
 #include "dl.h"
-#include <iostream>
+#include "log.h"
 
 static data_t data = data_t ();
 const data_t dl_content () {
 	return data;
 }
 
-size_t dl( void *ptr, size_t size, size_t nmemb, void *stream) {
+static size_t dl( void *ptr, size_t size, size_t nmemb, void *stream) {
 	ssize_t len = nmemb * size;
 	ssize_t dest = data.size ();
 	data.resize (data.size () + len);
@@ -18,6 +20,7 @@ size_t dl( void *ptr, size_t size, size_t nmemb, void *stream) {
 }
 
 int file_dl (const std::string& url) {
+	log ("dl " + url);
 	CURL* curl;
 	CURLcode res;
 
@@ -36,5 +39,20 @@ int file_dl (const std::string& url) {
 		return res;
 	}
 	return 0;
+}
+
+std::string dl_unpack (const std::string& url) {
+	log ("dl & unpack " + url);
+        file_dl (url);
+        std::string name = "/tmp/"; name.append (basename (url.c_str ()));
+        std::ofstream ofile;
+        ofile.open (name.c_str (), std::ofstream::out);
+        ofile.write (dl_content ().data (), dl_content ().size ());
+        ofile.close ();
+        std::string cmd = "/usr/bin/gzip -df " + name + ">";
+        cmd.append (name.begin (), name.end () - 3);
+        FILE* fp = popen (cmd.c_str (), "r");
+        fclose (fp);
+        return std::string (name.begin (), name.end () - 3);
 }
 
