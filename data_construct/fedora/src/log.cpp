@@ -5,13 +5,13 @@
 #include <iostream>
 
 void log (const char* str) {
-#ifdef LOG_ON
+#if LOG_ON==1
 	std::cout << str << std::endl;
 #endif
 }
 
 void log (const std::string& str) {
-#ifdef LOG_ON
+#if LOG_ON==1
         std::cout << str << std::endl;
 #endif
 }

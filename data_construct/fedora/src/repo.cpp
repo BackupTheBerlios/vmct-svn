@@ -37,10 +37,10 @@ int check (const char* type) {
         return -1;
 }
 
-Repo::Repo () {}
+Repo::Repo (std::ostream* _of) : of (_of) {}
 
 // process a .repo file
-RepoFile::RepoFile (const std::string& file) {
+RepoFile::RepoFile (const std::string& file, std::ostream* of) {
 	CSimpleIniA ini;
 	ini.LoadFile (file.c_str ());
 	sections_t section;
@@ -62,7 +62,7 @@ RepoFile::RepoFile (const std::string& file) {
 			if (!url.length ()) {
 				url = getBaseUrl (ini.GetValue (i->pItem, "mirrorlist"));
 			}
-			Repo repo_;
+			Repo repo_ (of);
 			if (repo_.processRepo (url) == 0) repo.push_back (repo_);
 		}
 	}
@@ -201,14 +201,21 @@ void Repo::processPrimary () {
 				}
 			}
 		}
-/*		log ("Name " + pkg.name);
-		log ("Version " + pkg.version.ver);
-		log ("Arch " + arch);
-		log ("Checksum " + checksum);
-		log ("Summary " + summary);
-		log ("Description " + description);
-		log ("Packager " + packager);
-		log ("Url " + url);*/
+		(*of) << "INSERT INTO package (name, arch, checksum, description, version, revision) VALUES ('" << pkg.name << "', '"
+		   << escape (pkg.arch) << "', " << escape (pkg.checksum.value) << "', '" << escape (pkg.description)
+		   << "', '" << escape (pkg.version.ver) << "', '" << escape (pkg.version.rev) << "')" << std::endl;
+		for (vEntry::iterator it = pkg.provides.begin (); it != pkg.provides.end (); it++) {
+			(*of) << "INSERT INTO entry (name, flags, epoch, ver) VALUES ('"
+			   << escape (it->name) << "', '" << escape (it->flags) << "', '"
+			   << escape (it->epoch) << "', '" << escape (it->ver) <<"');" << std::endl;
+			(*of) << "INSERT INTO provides (package, entry) VALUES ('" << escape (pkg.checksum.value) << "', '" << escape (it->name) << "');" << std::endl;
+		}
+                for (vEntry::iterator it = pkg.requires.begin (); it != pkg.requires.end (); it++) {
+                        (*of) << "INSERT INTO entry (name, flags, epoch, ver) VALUES ('"
+                           << escape (it->name) << "', '" << escape (it->flags) << "', '"
+                           << escape (it->epoch) << "', '" << escape (it->ver) <<"');" << std::endl;
+                        (*of) << "INSERT INTO requires (package, entry) VALUES ('" << escape (pkg.checksum.value) << "', '" << escape (it->name) << "');" << std::endl;
+                }
 	}
 
 	xmlFreeDoc(doc);
@@ -232,7 +239,10 @@ void Repo::processFileList () {
 		for (xmlNode* local = el->children; local; local = local->next) {
 			std::string file;
 			ifTextField (local, "file", file);
-			if (file.length ()) log ("file " + file);
+			if (file.length ()) {
+				log ("file " + file);
+				(*of) << "INSERT INTO file (package_id, name) VALUES ('" << escape (pkgId) << "', '" << escape (file) << "');" << std::endl;
+			}
 		}
 	}
 

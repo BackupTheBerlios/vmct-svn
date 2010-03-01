@@ -13,10 +13,10 @@ AC_CONFIG_FILES([
  src/Makefile
 ])
 
-AC_ARG_WITH(log,
-  [  --with-log           Log errors],
-  [ AC_DEFINE(LOG_ON, 1, "Inspect test suite errors")],
-  [ AC_DEFINE(LOG_ON, 0, "Inspect test suite errors")])
+#AC_ARG_WITH(log,
+#  [  --with-log           Log errors],
+#  [ AC_DEFINE(LOG_ON, 1, "Inspect test suite errors")],
+#  [ AC_DEFINE(LOG_ON, 0, "Inspect test suite errors")])
 
 AC_OUTPUT
 

@@ -26,6 +26,8 @@ struct Entry {
         std::string ver;
 };
 
+typedef std::vector<Entry> vEntry;
+
 struct Package {
         std::string name;
         std::string arch;
@@ -37,8 +39,8 @@ struct Package {
         Checksum checksum;
         Size size;
         std::string location;
-        std::vector<Entry> provides;
-        std::vector<Entry> requires;
+        vEntry provides;
+        vEntry requires;
 };
 
 #endif

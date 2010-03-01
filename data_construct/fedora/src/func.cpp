@@ -39,11 +39,41 @@ std::string getBaseUrl (const std::string& mirrorlist) {
         return url;
 }
 
-/*std::string basename (const std::string& url) {
-        std::string name;
-        ssize_t it = url.find_last_of ('/');
-        if (it != std::string::npos) name.assign (url.begin () + it + 1, url.end ());
-        else return url;
-        return name;
-}*/
+std::string escape (const std::string& str) {
+	std::string res;
+	char escape;
+	for (std::string::const_iterator it = str.begin (); it != str.end (); it++) {
+		escape = 0;
+		switch (*it) {
+			case 0:
+				escape = '0';
+			break;
+			case '\n':
+				escape = 'n';
+			break;
+			case '\r':
+                                escape = 'r';
+                        break;
+			case '\\':
+                                escape = '\\';
+                        break;
+			case '\'':
+                                escape = '\'';
+                        break;
+			case '"':
+                                escape = '"';
+                        break;
+			case '\032':
+                                escape = 'Z';
+                        break;
+		}
+		if (escape) {
+			res.push_back ('\\');
+			res.push_back (escape);
+		} else {
+			res.push_back (*it);
+		}
+	}
+	return res;
+}
 

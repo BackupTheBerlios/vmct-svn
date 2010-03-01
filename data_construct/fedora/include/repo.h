@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <ostream>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
@@ -16,15 +17,16 @@ class Repo {
 
 	std::string repomd;
 	std::vector<std::string> files;
+	std::ostream* of;
 
 	friend class RepoFile;
 public:
-	Repo ();
+	Repo (std::ostream* _of);
 };
 
 class RepoFile {
 public:
-	RepoFile (const std::string& file);
+	RepoFile (const std::string& file, std::ostream* of);
 	std::vector<Repo> repo;
 };
 
