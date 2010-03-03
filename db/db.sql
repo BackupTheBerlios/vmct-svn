@@ -11,6 +11,11 @@ CREATE TABLE IF NOT EXISTS `file` (
   `name` text NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS `os` (
+  `name` varchar(255) CHARACTER SET latin1 COLLATE latin1_general_cs NOT NULL,
+  PRIMARY KEY (`name`)
+);
+
 CREATE TABLE IF NOT EXISTS `package` (
   `name` varchar(255) NOT NULL,
   `arch` varchar(255) NOT NULL,
@@ -18,6 +23,7 @@ CREATE TABLE IF NOT EXISTS `package` (
   `description` text NOT NULL,
   `version` varchar(255) NOT NULL,
   `revision` varchar(255) NOT NULL,
+  `os_id` varchar(255) NOT NULL,
   PRIMARY KEY (`checksum`)
 );
 
