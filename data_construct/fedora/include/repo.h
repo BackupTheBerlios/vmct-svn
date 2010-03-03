@@ -18,15 +18,16 @@ class Repo {
 	std::string repomd;
 	std::vector<std::string> files;
 	std::ostream* of;
+	std::string os;
 
 	friend class RepoFile;
 public:
-	Repo (std::ostream* _of);
+	Repo (std::ostream* _of, const std::string& _os);
 };
 
 class RepoFile {
 public:
-	RepoFile (const std::string& file, std::ostream* of);
+	RepoFile (const std::string& file, std::ostream* of, const std::string& os);
 	std::vector<Repo> repo;
 };
 

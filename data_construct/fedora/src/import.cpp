@@ -9,10 +9,11 @@
 #include "dl.h"
 #include "repo.h"
 
-static const char* const short_options = "hr:o";
+static const char* const short_options = "hrs:o";
 static const struct option long_options [] = {
 	{"help", 0, NULL, 'h'},
 	{"repo", 1, NULL, 'r'},
+	{"os", 1, NULL, 's'},
 	{"out", 1, NULL, 'o'},
 	{NULL, 0, NULL, 0}
 };
@@ -20,11 +21,13 @@ static const struct option long_options [] = {
 static void display_usage () {
 	std::cout << "--help     This help" << std::endl;
 	std::cout << "--repo, -r Point to the file with repository metadata" << std::endl;
-	std::cout << "--out, -o  Point to out-file. Or none, if you need out to stdout." << std::endl;
+	std::cout << "--out,  -o Point to out-file. Or none, if you need out to stdout" << std::endl;
+	std::cout << "--os,   -s Name of OS. Fedora by default" << std::endl;
 }
 
 int main (int argc, char** argv) {
 	std::string file;
+	std::string os = "Fedora";
 
 	std::ostream* out = &std::cout;
 	std::ofstream of;
@@ -38,6 +41,9 @@ int main (int argc, char** argv) {
 			break;
 			case 'r': 
 				file = optarg;
+			break;
+			case 's':
+				os = optarg;
 			break;
 			case 'o': 
 				if (optarg) {
@@ -53,7 +59,7 @@ int main (int argc, char** argv) {
 		return 1;
 	}
 
-	RepoFile repo (file, out);
+	RepoFile repo (file, out, os);
 	of.close ();
 	
 	return 0;

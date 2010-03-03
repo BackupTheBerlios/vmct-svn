@@ -38,10 +38,10 @@ int check (const char* type) {
         return -1;
 }
 
-Repo::Repo (std::ostream* _of) : of (_of) {}
+Repo::Repo (std::ostream* _of, const std::string& _os) : of (_of), os (_os) {}
 
 // process a .repo file
-RepoFile::RepoFile (const std::string& file, std::ostream* of) {
+RepoFile::RepoFile (const std::string& file, std::ostream* of, const std::string& os) {
 	CSimpleIniA ini;
 	ini.LoadFile (file.c_str ());
 	sections_t section;
@@ -63,7 +63,7 @@ RepoFile::RepoFile (const std::string& file, std::ostream* of) {
 			if (!url.length ()) {
 				url = getBaseUrl (ini.GetValue (i->pItem, "mirrorlist"));
 			}
-			Repo repo_ (of);
+			Repo repo_ (of, os);
 			if (repo_.processRepo (url) == 0) repo.push_back (repo_);
 		}
 	}
@@ -205,7 +205,7 @@ void Repo::processPrimary () {
 				}
 			}
 		}
-		(*of) << "INSERT INTO package (name, arch, checksum, description, version, revision) VALUES ('" << pkg.name << "', '"
+		(*of) << "INSERT INTO package (os_id, name, arch, checksum, description, version, revision) VALUES ('" << escape (os) << "', '" << escape (pkg.name) << "', '"
 		   << escape (pkg.arch) << "', '" << escape (pkg.checksum.value) << "', '" << escape (pkg.description)
 		   << "', '" << escape (pkg.version.ver) << "', '" << escape (pkg.version.rev) << "');" << std::endl;
 		for (vEntry::iterator it = pkg.provides.begin (); it != pkg.provides.end (); it++) {
