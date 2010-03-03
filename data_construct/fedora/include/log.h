@@ -3,6 +3,8 @@
 
 #include <string>
 
+void setLogOn (bool);
+
 void log (const char*);
 void log (const std::string&);
 

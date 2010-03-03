@@ -1,18 +1,17 @@
 #include "log.h"
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
 #include <iostream>
 
+static bool logOn = false;
+
+void setLogOn (bool b) {
+	logOn = b;
+}
+
 void log (const char* str) {
-#if LOG_ON==1
-	std::cout << str << std::endl;
-#endif
+	if (logOn) std::cout << str << std::endl;
 }
 
 void log (const std::string& str) {
-#if LOG_ON==1
-        std::cout << str << std::endl;
-#endif
+	if (logOn) std::cout << str << std::endl;
 }
 

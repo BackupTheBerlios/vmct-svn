@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <fstream>
 #include <stdio.h>
+#include <map>
 
 #include "func.h"
 #include "repo.h"
@@ -176,6 +177,9 @@ void Repo::processPrimary () {
 
 	Package pkg;
 
+	std::map<std::string, int> e;
+	std::map<std::string, int>::iterator eit;
+
 	xmlNode *el = xmlDocGetRootElement(doc); // metadata
 	for (el = el->children; el; el = el->next) {
 		if (strncmp ((const char*)el->name, "package", 7) != 0) continue;
@@ -202,19 +206,25 @@ void Repo::processPrimary () {
 			}
 		}
 		(*of) << "INSERT INTO package (name, arch, checksum, description, version, revision) VALUES ('" << pkg.name << "', '"
-		   << escape (pkg.arch) << "', " << escape (pkg.checksum.value) << "', '" << escape (pkg.description)
-		   << "', '" << escape (pkg.version.ver) << "', '" << escape (pkg.version.rev) << "')" << std::endl;
+		   << escape (pkg.arch) << "', '" << escape (pkg.checksum.value) << "', '" << escape (pkg.description)
+		   << "', '" << escape (pkg.version.ver) << "', '" << escape (pkg.version.rev) << "');" << std::endl;
 		for (vEntry::iterator it = pkg.provides.begin (); it != pkg.provides.end (); it++) {
-			(*of) << "INSERT INTO entry (name, flags, epoch, ver) VALUES ('"
-			   << escape (it->name) << "', '" << escape (it->flags) << "', '"
-			   << escape (it->epoch) << "', '" << escape (it->ver) <<"');" << std::endl;
-			(*of) << "INSERT INTO provides (package, entry) VALUES ('" << escape (pkg.checksum.value) << "', '" << escape (it->name) << "');" << std::endl;
+			if (e[it->name] == 0) {
+				e[it->name] = 1;
+				(*of) << "INSERT INTO entry (name, flags, epoch, ver) VALUES ('"
+				   << escape (it->name) << "', '" << escape (it->flags) << "', '"
+				   << escape (it->epoch) << "', '" << escape (it->ver) <<"');" << std::endl;
+			}
+			(*of) << "INSERT INTO provides (package_id, entry_id) VALUES ('" << escape (pkg.checksum.value) << "', '" << escape (it->name) << "');" << std::endl;
 		}
                 for (vEntry::iterator it = pkg.requires.begin (); it != pkg.requires.end (); it++) {
-                        (*of) << "INSERT INTO entry (name, flags, epoch, ver) VALUES ('"
-                           << escape (it->name) << "', '" << escape (it->flags) << "', '"
-                           << escape (it->epoch) << "', '" << escape (it->ver) <<"');" << std::endl;
-                        (*of) << "INSERT INTO requires (package, entry) VALUES ('" << escape (pkg.checksum.value) << "', '" << escape (it->name) << "');" << std::endl;
+                        if (e[it->name] == 0) {
+				e[it->name] = 1;
+	                        (*of) << "INSERT INTO entry (name, flags, epoch, ver) VALUES ('"
+	                           << escape (it->name) << "', '" << escape (it->flags) << "', '"
+	                           << escape (it->epoch) << "', '" << escape (it->ver) <<"');" << std::endl;
+			}
+                        (*of) << "INSERT INTO requires (package_id, entry_id) VALUES ('" << escape (pkg.checksum.value) << "', '" << escape (it->name) << "');" << std::endl;
                 }
 	}
 
@@ -234,7 +244,7 @@ void Repo::processFileList () {
 	for (el = el->children; el; el = el->next) {
 		if (strncmp ((const char*)el->name, "package", 7) != 0) continue;
 		std::string pkgId;
-		ifGetProp (el, "package", "pkgId", pkgId);
+		ifGetProp (el, "package", "pkgid", pkgId);
 		log ("package " + pkgId);
 		for (xmlNode* local = el->children; local; local = local->next) {
 			std::string file;
