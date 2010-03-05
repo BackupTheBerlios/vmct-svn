@@ -97,6 +97,8 @@ int Repo::processRepo (const std::string& repomd) {
 
 	xmlFreeDoc(doc);
 
+	(*of) << "INSERT INTO os (name) VALUES ('" << escape (os) << "');" << std::endl;
+
 	processPrimary ();
 	processFileList ();
 
@@ -205,7 +207,7 @@ void Repo::processPrimary () {
 				}
 			}
 		}
-		(*of) << "INSERT INTO package (os_id, name, arch, checksum, description, version, revision) VALUES ('" << escape (os) << "', '" << escape (pkg.name) << "', '"
+		(*of) << "INSERT INTO package (os, name, arch, checksum, description, version, revision) VALUES ('" << escape (os) << "', '" << escape (pkg.name) << "', '"
 		   << escape (pkg.arch) << "', '" << escape (pkg.checksum.value) << "', '" << escape (pkg.description)
 		   << "', '" << escape (pkg.version.ver) << "', '" << escape (pkg.version.rev) << "');" << std::endl;
 		for (vEntry::iterator it = pkg.provides.begin (); it != pkg.provides.end (); it++) {
@@ -215,7 +217,7 @@ void Repo::processPrimary () {
 				   << escape (it->name) << "', '" << escape (it->flags) << "', '"
 				   << escape (it->epoch) << "', '" << escape (it->ver) <<"');" << std::endl;
 			}
-			(*of) << "INSERT INTO provides (package_id, entry_id) VALUES ('" << escape (pkg.checksum.value) << "', '" << escape (it->name) << "');" << std::endl;
+			(*of) << "INSERT INTO relation (type, package, entry) VALUES ( 'provides', '" << escape (pkg.checksum.value) << "', '" << escape (it->name) << "');" << std::endl;
 		}
                 for (vEntry::iterator it = pkg.requires.begin (); it != pkg.requires.end (); it++) {
                         if (e[it->name] == 0) {
@@ -224,7 +226,7 @@ void Repo::processPrimary () {
 	                           << escape (it->name) << "', '" << escape (it->flags) << "', '"
 	                           << escape (it->epoch) << "', '" << escape (it->ver) <<"');" << std::endl;
 			}
-                        (*of) << "INSERT INTO requires (package_id, entry_id) VALUES ('" << escape (pkg.checksum.value) << "', '" << escape (it->name) << "');" << std::endl;
+			(*of) << "INSERT INTO relation (type, package, entry) VALUES ( 'requires', '" << escape (pkg.checksum.value) << "', '" << escape (it->name) << "');" << std::endl;
                 }
 	}
 
@@ -251,7 +253,7 @@ void Repo::processFileList () {
 			ifTextField (local, "file", file);
 			if (file.length ()) {
 				log ("file " + file);
-				(*of) << "INSERT INTO file (package_id, name) VALUES ('" << escape (pkgId) << "', '" << escape (file) << "');" << std::endl;
+				(*of) << "INSERT INTO file (package, name) VALUES ('" << escape (pkgId) << "', '" << escape (file) << "');" << std::endl;
 			}
 		}
 	}
