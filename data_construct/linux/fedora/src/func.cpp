@@ -8,7 +8,7 @@ xmlNode* getFirstUrl(xmlNode * a_node) {
         std::string name;
         xmlNode* ret;
         for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
-                if (strncmp ("url", (const char*)cur_node->name, 3) == 0) return cur_node;
+                if (strncmp ("url", reinterpret_cast<const char*>(cur_node->name), 3) == 0) return cur_node;
                 ret = getFirstUrl (cur_node->children);
                 if (ret) return ret;
         }
@@ -30,7 +30,7 @@ std::string getBaseUrl (const std::string& mirrorlist) {
         if (el) {
                 el = el->children;
                 if (el && el->content) {
-                        url = (const char*)el->content;
+                        url = reinterpret_cast<const char*>(el->content);
                 }
         }
 

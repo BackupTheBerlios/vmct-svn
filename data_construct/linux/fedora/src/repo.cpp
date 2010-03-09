@@ -82,10 +82,10 @@ int Repo::processRepo (const std::string& repomd) {
 	this->files.resize (data_tag_count);
 
 	xmlNode *el = xmlDocGetRootElement(doc);
-	if (el && strncmp ((const char*)el->name, "repomd", 6) == 0) {
+	if (el && strncmp (reinterpret_cast<const char*>(el->name), "repomd", 6) == 0) {
 		el = el->children;
 		for (;el; el = el->next) {
-			if (strncmp ((const char*)el->name, "data", 4) == 0) {
+			if (strncmp (reinterpret_cast<const char*>(el->name), "data", 4) == 0) {
 				processDataTag (el);
 			}
 		}
@@ -107,7 +107,7 @@ int Repo::processRepo (const std::string& repomd) {
 
 // extract information from <data>-tags
 int Repo::processDataTag (xmlNode* el) {
-	const char* type = (const char*)xmlGetProp (el, (const xmlChar*)"type");
+	const char* type = reinterpret_cast<const char*> (xmlGetProp (el, reinterpret_cast<const xmlChar*>("type")));
 
 	int idx = check (type);
 	if (idx == -1) return E_NONE;
@@ -123,12 +123,12 @@ std::string Repo::processDataTag_ (xmlNode* el, const char* name) {
 
         local = local->children;
         for (;local;local = local->next) {
-	        if (strncmp ((const char*)local->name, "location", 8) == 0) break;
+	        if (strncmp (reinterpret_cast<const char*>(local->name), "location", 8) == 0) break;
 	}
 	if (local) {
 	        std::string url = repomd;
 	        url.resize (url.length () - 19);
-		std::string fileName = (const char*)xmlGetProp (local, (const xmlChar*)"href");
+		std::string fileName = reinterpret_cast<const char*> (xmlGetProp (local, reinterpret_cast<const xmlChar*>("href")));
 	        url.append (fileName);
 		if ( strncmp (".xml.gz", std::string (url.end () - 7, url.end ()).c_str (), 7) == 0 ) {
 			return dl_unpack (url);
@@ -140,23 +140,23 @@ std::string Repo::processDataTag_ (xmlNode* el, const char* name) {
 
 void ifTextField (xmlNode* el, const char* name, std::string& value) {
 	if (!el) return;
-	if (strncmp ((const char*)el->name, name, strlen (name)) == 0) {
-		if (el->children && el->children->content) value = (const char*)el->children->content;
+	if (strncmp (reinterpret_cast<const char*>(el->name), name, strlen (name)) == 0) {
+		if (el->children && el->children->content) value = reinterpret_cast<const char*>(el->children->content);
 	}
 }
 
 void ifGetProp (xmlNode* el, const char* elName, const char* propName, std::string& value) {
 	if (!el) return;
-	if (strncmp ((const char*)el->name, elName, strlen (elName)) == 0) {
-		const char* ptr = (const char*)xmlGetProp (el, (const xmlChar*)propName);
+	if (strncmp (reinterpret_cast<const char*>(el->name), elName, strlen (elName)) == 0) {
+		const char* ptr = reinterpret_cast<const char*> (xmlGetProp (el, reinterpret_cast<const xmlChar*>(propName)));
 		if (ptr) value.assign (ptr);
 	}
 }
 
 void extractList (xmlNode* el2, const char* name, std::vector<Entry>& data) {
-	if (strncmp ((const char*)el2->name, name, strlen (name)) == 0) {
+	if (strncmp (reinterpret_cast<const char*>(el2->name), name, strlen (name)) == 0) {
 		for (xmlNode* el3 = el2->children; el3; el3 = el3->next) {
-		        if (strncmp ((const char*)el3->name, "entry", 5) == 0) {
+		        if (strncmp (reinterpret_cast<const char*>(el3->name), "entry", 5) == 0) {
 		                Entry e;
 		                ifGetProp (el3, "entry", "name", e.name);
 		                ifGetProp (el3, "entry", "flags", e.flags);
@@ -184,7 +184,7 @@ void Repo::processPrimary () {
 
 	xmlNode *el = xmlDocGetRootElement(doc); // metadata
 	for (el = el->children; el; el = el->next) {
-		if (strncmp ((const char*)el->name, "package", 7) != 0) continue;
+		if (strncmp (reinterpret_cast<const char*>(el->name), "package", 7) != 0) continue;
 		pkg.provides.resize (0);
                 pkg.requires.resize (0);
 		for (xmlNode* local = el->children; local; local = local->next) {
@@ -200,7 +200,7 @@ void Repo::processPrimary () {
 			ifGetProp (local, "version", "rev", pkg.version.rev);
 			ifGetProp (local, "checksum", "type", pkg.checksum.type);
 			ifGetProp (local, "checksum", "pkgId", pkg.checksum.pkgId);
-			if (strncmp ((const char*)local->name, "format", 6) == 0) {
+			if (strncmp (reinterpret_cast<const char*>(local->name), "format", 6) == 0) {
 				for (xmlNode* el2 = local->children; el2; el2 = el2->next) {
 					extractList (el2, "provides", pkg.provides);
 					extractList (el2, "requires", pkg.requires);
@@ -244,7 +244,7 @@ void Repo::processFileList () {
 
 	xmlNode *el = xmlDocGetRootElement(doc); // filelists
 	for (el = el->children; el; el = el->next) {
-		if (strncmp ((const char*)el->name, "package", 7) != 0) continue;
+		if (strncmp (reinterpret_cast<const char*>(el->name), "package", 7) != 0) continue;
 		std::string pkgId;
 		ifGetProp (el, "package", "pkgid", pkgId);
 		log ("package " + pkgId);
