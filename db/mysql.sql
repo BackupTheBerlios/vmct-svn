@@ -1,3 +1,5 @@
+USE vmct;
+
 CREATE TABLE IF NOT EXISTS `entry` (
   `name` varchar(255) COLLATE latin1_general_cs NOT NULL,
   `flags` varchar(255) COLLATE latin1_general_cs NOT NULL,

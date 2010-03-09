@@ -75,8 +75,3 @@ ALTER TABLE ONLY relation
 ALTER TABLE ONLY relation
     ADD CONSTRAINT relation_ibfk_2 FOREIGN KEY (package) REFERENCES package(checksum);
 
-REVOKE ALL ON SCHEMA public FROM PUBLIC;
-REVOKE ALL ON SCHEMA public FROM postgres;
-GRANT ALL ON SCHEMA public TO postgres;
-GRANT ALL ON SCHEMA public TO PUBLIC;
-
