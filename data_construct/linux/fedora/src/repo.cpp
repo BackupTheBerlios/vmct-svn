@@ -12,6 +12,7 @@
 #include "log.h"
 #include "package.h"
 #include "SimpleIni.h"
+#include "writer.h"
 
 typedef CSimpleIniA::TNamesDepend sections_t;
 typedef CSimpleIniA::TNamesDepend keys_t;
@@ -38,10 +39,16 @@ int check (const char* type) {
         return -1;
 }
 
-Repo::Repo (std::ostream* _of, const std::string& _os) : of (_of), os (_os) {}
+Repo::Repo (/*std::ostream* _of*/WriterFactory* f, const std::string& p, const std::string& _os) : /*of (_of),*/ factory(f), path(p), os (_os) {
+	writer = factory->createWriter (path);
+}
+
+Repo::~Repo () {
+	delete writer;
+}
 
 // process a .repo file
-RepoFile::RepoFile (const std::string& file, std::ostream* of, const std::string& os) {
+RepoFile::RepoFile (const std::string& file, /*std::ostream* of,*/ WriterFactory* f, const std::string& path, const std::string& os) {
 	CSimpleIniA ini;
 	ini.LoadFile (file.c_str ());
 	sections_t section;
@@ -63,8 +70,9 @@ RepoFile::RepoFile (const std::string& file, std::ostream* of, const std::string
 			if (!url.length ()) {
 				url = getBaseUrl (ini.GetValue (i->pItem, "mirrorlist"));
 			}
-			Repo repo_ (of, os);
-			if (repo_.processRepo (url) == 0) repo.push_back (repo_);
+			Repo repo_ (/*of*/f, path, os);
+			repo_.processRepo (url);
+//			if (repo_.processRepo (url) == 0) repo.push_back (repo_);
 		}
 	}
 }
@@ -97,7 +105,15 @@ int Repo::processRepo (const std::string& repomd) {
 
 	xmlFreeDoc(doc);
 
-	(*of) << "INSERT INTO os (name) VALUES ('" << escape (os) << "');" << std::endl;
+	TableInfo info ("os");
+	info.addField ("name");
+	Row* r = factory->createRow (info);
+	r->setValue (0, os);
+	writer->out (r);
+	
+	delete r;
+
+//	(*of) << "INSERT INTO os (name) VALUES ('" << escape (os) << "');" << std::endl;
 
 	processPrimary ();
 	processFileList ();
@@ -182,6 +198,32 @@ void Repo::processPrimary () {
 	std::map<std::string, int> e;
 	std::map<std::string, int>::iterator eit;
 
+	TableInfo pkgInfo ("package");
+	pkgInfo.addField ("os");
+        pkgInfo.addField ("name");
+        pkgInfo.addField ("arch");
+        pkgInfo.addField ("checksum");
+        pkgInfo.addField ("description");
+        pkgInfo.addField ("version");
+        pkgInfo.addField ("revision");
+
+	Row* pr = factory->createRow (pkgInfo);
+
+	TableInfo entryInfo ("entry");
+	entryInfo.addField ("name");
+        entryInfo.addField ("flags");
+        entryInfo.addField ("epoch");
+        entryInfo.addField ("ver");
+
+	Row* er = factory->createRow (entryInfo);
+
+	TableInfo relInfo ("relation");
+	relInfo.addField ("type");
+        relInfo.addField ("package");
+        relInfo.addField ("entry");
+
+	Row* rr = factory->createRow (relInfo);
+
 	xmlNode *el = xmlDocGetRootElement(doc); // metadata
 	for (el = el->children; el; el = el->next) {
 		if (strncmp (reinterpret_cast<const char*>(el->name), "package", 7) != 0) continue;
@@ -207,28 +249,59 @@ void Repo::processPrimary () {
 				}
 			}
 		}
-		(*of) << "INSERT INTO package (os, name, arch, checksum, description, version, revision) VALUES ('" << escape (os) << "', '" << escape (pkg.name) << "', '"
-		   << escape (pkg.arch) << "', '" << escape (pkg.checksum.value) << "', '" << escape (pkg.description)
-		   << "', '" << escape (pkg.version.ver) << "', '" << escape (pkg.version.rev) << "');" << std::endl;
+		pr->setValue (0, os);
+                pr->setValue (1, pkg.name);
+                pr->setValue (2, pkg.arch);
+                pr->setValue (3, pkg.checksum.value);
+                pr->setValue (4, pkg.description);
+                pr->setValue (5, pkg.version.ver);
+                pr->setValue (6, pkg.version.rev);
+		writer->out (pr);
+
+//		(*of) << "INSERT INTO package (os, name, arch, checksum, description, version, revision) VALUES ('" << escape (os) << "', '" << escape (pkg.name) << "', '"
+//		   << escape (pkg.arch) << "', '" << escape (pkg.checksum.value) << "', '" << escape (pkg.description)
+//		   << "', '" << escape (pkg.version.ver) << "', '" << escape (pkg.version.rev) << "');" << std::endl;
 		for (vEntry::iterator it = pkg.provides.begin (); it != pkg.provides.end (); it++) {
 			if (e[it->name] == 0) {
 				e[it->name] = 1;
-				(*of) << "INSERT INTO entry (name, flags, epoch, ver) VALUES ('"
-				   << escape (it->name) << "', '" << escape (it->flags) << "', '"
-				   << escape (it->epoch) << "', '" << escape (it->ver) <<"');" << std::endl;
+				er->setValue (0, it->name);
+                                er->setValue (1, it->flags);
+                                er->setValue (2, it->epoch);
+                                er->setValue (3, it->ver);
+				writer->out (er);
+//				(*of) << "INSERT INTO entry (name, flags, epoch, ver) VALUES ('"
+//				   << escape (it->name) << "', '" << escape (it->flags) << "', '"
+//				   << escape (it->epoch) << "', '" << escape (it->ver) <<"');" << std::endl;
 			}
-			(*of) << "INSERT INTO relation (type, package, entry) VALUES ( 'provides', '" << escape (pkg.checksum.value) << "', '" << escape (it->name) << "');" << std::endl;
+                        rr->setValue (0, "provides");
+			rr->setValue (1, pkg.checksum.value);
+                        rr->setValue (2, it->name);
+			writer->out (rr);
+//			(*of) << "INSERT INTO relation (type, package, entry) VALUES ( 'provides', '" << escape (pkg.checksum.value) << "', '" << escape (it->name) << "');" << std::endl;
 		}
                 for (vEntry::iterator it = pkg.requires.begin (); it != pkg.requires.end (); it++) {
                         if (e[it->name] == 0) {
 				e[it->name] = 1;
-	                        (*of) << "INSERT INTO entry (name, flags, epoch, ver) VALUES ('"
-	                           << escape (it->name) << "', '" << escape (it->flags) << "', '"
-	                           << escape (it->epoch) << "', '" << escape (it->ver) <<"');" << std::endl;
+                                er->setValue (0, it->name);
+                                er->setValue (1, it->flags);
+                                er->setValue (2, it->epoch);
+                                er->setValue (3, it->ver);
+                                writer->out (er);
+//	                        (*of) << "INSERT INTO entry (name, flags, epoch, ver) VALUES ('"
+//	                           << escape (it->name) << "', '" << escape (it->flags) << "', '"
+//	                           << escape (it->epoch) << "', '" << escape (it->ver) <<"');" << std::endl;
 			}
-			(*of) << "INSERT INTO relation (type, package, entry) VALUES ( 'requires', '" << escape (pkg.checksum.value) << "', '" << escape (it->name) << "');" << std::endl;
+                        rr->setValue (0, "requires");
+                        rr->setValue (1, pkg.checksum.value);
+                        rr->setValue (2, it->name);
+                        writer->out (rr);
+//			(*of) << "INSERT INTO relation (type, package, entry) VALUES ( 'requires', '" << escape (pkg.checksum.value) << "', '" << escape (it->name) << "');" << std::endl;
                 }
 	}
+
+	delete rr;
+	delete er;
+	delete pr;
 
 	xmlFreeDoc(doc);
 }
@@ -242,6 +315,12 @@ void Repo::processFileList () {
                 return;
         }
 
+	TableInfo fileInfo ("file");
+	fileInfo.addField ("package");
+        fileInfo.addField ("name");
+
+	Row* fr = factory->createRow (fileInfo);
+
 	xmlNode *el = xmlDocGetRootElement(doc); // filelists
 	for (el = el->children; el; el = el->next) {
 		if (strncmp (reinterpret_cast<const char*>(el->name), "package", 7) != 0) continue;
@@ -253,10 +332,15 @@ void Repo::processFileList () {
 			ifTextField (local, "file", file);
 			if (file.length ()) {
 				log ("file " + file);
-				(*of) << "INSERT INTO file (package, name) VALUES ('" << escape (pkgId) << "', '" << escape (file) << "');" << std::endl;
+				fr->setValue (0, pkgId);
+                                fr->setValue (0, file);
+				writer->out (fr);
+//				(*of) << "INSERT INTO file (package, name) VALUES ('" << escape (pkgId) << "', '" << escape (file) << "');" << std::endl;
 			}
 		}
 	}
+
+	delete fr;
 
 	xmlFreeDoc(doc);
 }

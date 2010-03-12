@@ -8,6 +8,7 @@
 #include <getopt.h>
 #include "dl.h"
 #include "repo.h"
+#include "writer.h"
 
 static const char* const short_options = "hrs:o";
 static const struct option long_options [] = {
@@ -28,9 +29,10 @@ static void display_usage () {
 int main (int argc, char** argv) {
 	std::string file;
 	std::string os = "Fedora";
+	std::string out;
 
-	std::ostream* out = &std::cout;
-	std::ofstream of;
+//	std::ostream* out = &std::cout;
+//	std::ofstream of;
 
 	int c;
 	while ((c = getopt_long (argc, argv, short_options, long_options, NULL)) != -1) {
@@ -46,10 +48,11 @@ int main (int argc, char** argv) {
 				os = optarg;
 			break;
 			case 'o': 
-				if (optarg) {
-					of.open (optarg);
-					out = &of;
-				}
+				out = optarg;
+//				if (optarg) {
+//					of.open (optarg);
+//					out = &of;
+//				}
 			break;
 		}
 	}
@@ -59,8 +62,12 @@ int main (int argc, char** argv) {
 		return 1;
 	}
 
-	RepoFile repo (file, out, os);
-	of.close ();
+	SQLFactory factory;
+//	Writer* w = factory.createWriter (out);
+
+	RepoFile repo (file, /*out*/&factory, out, os);
+
+//	of.close ();
 	
 	return 0;
 }

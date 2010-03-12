@@ -11,6 +11,8 @@ const data_t dl_content () {
 	return data;
 }
 
+#include <stdio.h>
+
 static size_t dl( void *ptr, size_t size, size_t nmemb, void *stream) {
 	ssize_t len = nmemb * size;
 	ssize_t dest = data.size ();
@@ -31,7 +33,7 @@ int file_dl (const std::string& url) {
 	data.resize (0);
 
 	if (curl) {
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, NULL);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*) &data /*NULL*/);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, dl);
 		curl_easy_setopt(curl, CURLOPT_URL, url.c_str ());
 		res = curl_easy_perform(curl);

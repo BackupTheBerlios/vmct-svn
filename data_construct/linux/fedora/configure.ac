@@ -1,4 +1,8 @@
 AC_INIT([fedora-import], [0.1], [andrey.baboshin@gmail.com])
+    PKG_CHECK_MODULES(SOMEAPP, libxml++-2.6 >= 2.10.0)
+    AC_SUBST(SOMEAPP_CFLAGS)
+    AC_SUBST(SOMEAPP_LIBS)
+
 PKG_CHECK_MODULES(XML, libxml-2.0 >= 2.4)
 PKG_CHECK_MODULES(CURL, libcurl >= 7.10.0)
 AC_SUBST(XML_CFLAGS)
