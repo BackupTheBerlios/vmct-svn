@@ -39,7 +39,7 @@ int check (const char* type) {
         return -1;
 }
 
-Repo::Repo (/*std::ostream* _of*/WriterFactory* f, const std::string& p, const std::string& _os) : /*of (_of),*/ factory(f), path(p), os (_os) {
+Repo::Repo (WriterFactory* f, const std::string& p, const std::string& _os) : factory(f), path(p), os (_os) {
 	writer = factory->createWriter (path);
 }
 
@@ -48,7 +48,7 @@ Repo::~Repo () {
 }
 
 // process a .repo file
-RepoFile::RepoFile (const std::string& file, /*std::ostream* of,*/ WriterFactory* f, const std::string& path, const std::string& os) {
+RepoFile::RepoFile (const std::string& file, WriterFactory* factory, const std::string& path, const std::string& os) {
 	CSimpleIniA ini;
 	ini.LoadFile (file.c_str ());
 	sections_t section;
@@ -70,9 +70,8 @@ RepoFile::RepoFile (const std::string& file, /*std::ostream* of,*/ WriterFactory
 			if (!url.length ()) {
 				url = getBaseUrl (ini.GetValue (i->pItem, "mirrorlist"));
 			}
-			Repo repo_ (/*of*/f, path, os);
+			Repo repo_ (factory, path, os);
 			repo_.processRepo (url);
-//			if (repo_.processRepo (url) == 0) repo.push_back (repo_);
 		}
 	}
 }
@@ -112,8 +111,6 @@ int Repo::processRepo (const std::string& repomd) {
 	writer->out (r);
 	
 	delete r;
-
-//	(*of) << "INSERT INTO os (name) VALUES ('" << escape (os) << "');" << std::endl;
 
 	processPrimary ();
 	processFileList ();
@@ -258,9 +255,6 @@ void Repo::processPrimary () {
                 pr->setValue (6, pkg.version.rev);
 		writer->out (pr);
 
-//		(*of) << "INSERT INTO package (os, name, arch, checksum, description, version, revision) VALUES ('" << escape (os) << "', '" << escape (pkg.name) << "', '"
-//		   << escape (pkg.arch) << "', '" << escape (pkg.checksum.value) << "', '" << escape (pkg.description)
-//		   << "', '" << escape (pkg.version.ver) << "', '" << escape (pkg.version.rev) << "');" << std::endl;
 		for (vEntry::iterator it = pkg.provides.begin (); it != pkg.provides.end (); it++) {
 			if (e[it->name] == 0) {
 				e[it->name] = 1;
@@ -269,15 +263,11 @@ void Repo::processPrimary () {
                                 er->setValue (2, it->epoch);
                                 er->setValue (3, it->ver);
 				writer->out (er);
-//				(*of) << "INSERT INTO entry (name, flags, epoch, ver) VALUES ('"
-//				   << escape (it->name) << "', '" << escape (it->flags) << "', '"
-//				   << escape (it->epoch) << "', '" << escape (it->ver) <<"');" << std::endl;
 			}
                         rr->setValue (0, "provides");
 			rr->setValue (1, pkg.checksum.value);
                         rr->setValue (2, it->name);
 			writer->out (rr);
-//			(*of) << "INSERT INTO relation (type, package, entry) VALUES ( 'provides', '" << escape (pkg.checksum.value) << "', '" << escape (it->name) << "');" << std::endl;
 		}
                 for (vEntry::iterator it = pkg.requires.begin (); it != pkg.requires.end (); it++) {
                         if (e[it->name] == 0) {
@@ -287,15 +277,11 @@ void Repo::processPrimary () {
                                 er->setValue (2, it->epoch);
                                 er->setValue (3, it->ver);
                                 writer->out (er);
-//	                        (*of) << "INSERT INTO entry (name, flags, epoch, ver) VALUES ('"
-//	                           << escape (it->name) << "', '" << escape (it->flags) << "', '"
-//	                           << escape (it->epoch) << "', '" << escape (it->ver) <<"');" << std::endl;
 			}
                         rr->setValue (0, "requires");
                         rr->setValue (1, pkg.checksum.value);
                         rr->setValue (2, it->name);
                         writer->out (rr);
-//			(*of) << "INSERT INTO relation (type, package, entry) VALUES ( 'requires', '" << escape (pkg.checksum.value) << "', '" << escape (it->name) << "');" << std::endl;
                 }
 	}
 
@@ -335,7 +321,6 @@ void Repo::processFileList () {
 				fr->setValue (0, pkgId);
                                 fr->setValue (0, file);
 				writer->out (fr);
-//				(*of) << "INSERT INTO file (package, name) VALUES ('" << escape (pkgId) << "', '" << escape (file) << "');" << std::endl;
 			}
 		}
 	}
@@ -344,5 +329,4 @@ void Repo::processFileList () {
 
 	xmlFreeDoc(doc);
 }
-
 

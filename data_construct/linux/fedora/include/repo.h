@@ -18,7 +18,6 @@ class Repo {
 
 	std::string repomd;
 	std::vector<std::string> files;
-//	std::ostream* of;
 	std::string os;
 	Writer* writer;
 	WriterFactory* factory;
@@ -26,14 +25,13 @@ class Repo {
 
 	friend class RepoFile;
 public:
-	Repo (/*std::ostream* _of*/WriterFactory* f, const std::string& path, const std::string& _os);
+	Repo (WriterFactory* f, const std::string& path, const std::string& _os);
 	~Repo ();
 };
 
 class RepoFile {
 public:
-	RepoFile (const std::string& file, /*std::ostream* of*/WriterFactory* f, const std::string& path, const std::string& os);
-	std::vector<Repo> repo;
+	RepoFile (const std::string& file, WriterFactory* f, const std::string& path, const std::string& os);
 };
 
 

@@ -31,9 +31,6 @@ int main (int argc, char** argv) {
 	std::string os = "Fedora";
 	std::string out;
 
-//	std::ostream* out = &std::cout;
-//	std::ofstream of;
-
 	int c;
 	while ((c = getopt_long (argc, argv, short_options, long_options, NULL)) != -1) {
 		switch (c) {
@@ -49,10 +46,6 @@ int main (int argc, char** argv) {
 			break;
 			case 'o': 
 				out = optarg;
-//				if (optarg) {
-//					of.open (optarg);
-//					out = &of;
-//				}
 			break;
 		}
 	}
@@ -63,12 +56,9 @@ int main (int argc, char** argv) {
 	}
 
 	SQLFactory factory;
-//	Writer* w = factory.createWriter (out);
 
-	RepoFile repo (file, /*out*/&factory, out, os);
+	RepoFile repo (file, &factory, out, os);
 
-//	of.close ();
-	
 	return 0;
 }
  
