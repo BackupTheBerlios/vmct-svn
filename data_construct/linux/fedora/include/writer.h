@@ -31,21 +31,6 @@ public:
 	std::string getName () const;
 };
 
-class SQLRow : public Row {
-public:
-	SQLRow (const TableInfo&);
-	virtual ~SQLRow ();
-	void out (std::ostream*) const;
-};
-
-class CSVRow : public Row {
-public:
-        CSVRow (const TableInfo&);
-        virtual ~CSVRow ();
-        void out (std::ostream*) const;
-};
-
-
 class Writer {
 protected:
 	std::string path;
@@ -57,40 +42,10 @@ public:
 	int getError () const;
 };
 
-class SQLWriter : public Writer {
-	std::ofstream of;
-public:
-	SQLWriter (const std::string&);
-	virtual ~SQLWriter ();
-	void out (boost::shared_ptr<Row>);
-};
-
-class CSVWriter : public Writer {
-	typedef std::map<std::string, boost::shared_ptr<std::ofstream> > of_t;
-        of_t of;
-public:
-        CSVWriter (const std::string&);
-        virtual ~CSVWriter ();
-        void out (boost::shared_ptr<Row>);
-};
-
-
 class WriterFactory {
 public:
 	virtual boost::shared_ptr<Writer> createWriter (const std::string&) = 0;
 	virtual boost::shared_ptr<Row> createRow (const TableInfo&) = 0;
-};
-
-class SQLFactory : public WriterFactory {
-public:
-	boost::shared_ptr<Writer> createWriter (const std::string&);
-	boost::shared_ptr<Row> createRow (const TableInfo&);
-};
-
-class CSVFactory : public WriterFactory {
-public:
-        boost::shared_ptr<Writer> createWriter (const std::string&);
-        boost::shared_ptr<Row> createRow (const TableInfo&);
 };
 
 #endif 

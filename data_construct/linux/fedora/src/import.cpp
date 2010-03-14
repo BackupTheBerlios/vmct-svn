@@ -9,7 +9,8 @@
 #include <string.h>
 #include "dl.h"
 #include "repo.h"
-#include "writer.h"
+#include "sqlwriter.h"
+#include "csvwriter.h"
 
 static const char* const short_options = "hr:s:t:o:";
 static const struct option long_options [] = {
@@ -66,10 +67,6 @@ int main (int argc, char** argv) {
 		display_usage ();
 		return 1;
 	}
-
-//	file = "../fedora.repo";
-//	out = "fedora.csv";
-//	factory = boost::shared_ptr<WriterFactory> (new CSVFactory);
 
 	RepoFile repo (file, factory, out, os);
 
