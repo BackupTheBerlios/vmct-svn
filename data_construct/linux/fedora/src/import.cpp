@@ -6,15 +6,17 @@
 #include <ostream>
 #include <fstream>
 #include <getopt.h>
+#include <string.h>
 #include "dl.h"
 #include "repo.h"
 #include "writer.h"
 
-static const char* const short_options = "hrs:o";
+static const char* const short_options = "hr:s:t:o:";
 static const struct option long_options [] = {
 	{"help", 0, NULL, 'h'},
 	{"repo", 1, NULL, 'r'},
 	{"os", 1, NULL, 's'},
+	{"type", 1, NULL, 't'},
 	{"out", 1, NULL, 'o'},
 	{NULL, 0, NULL, 0}
 };
@@ -24,12 +26,14 @@ static void display_usage () {
 	std::cout << "--repo, -r Point to the file with repository metadata" << std::endl;
 	std::cout << "--out,  -o Point to out-file. Or none, if you need out to stdout" << std::endl;
 	std::cout << "--os,   -s Name of OS. Fedora by default" << std::endl;
+	std::cout << "--type, -t Type of output (sql, csv)" << std::endl;
 }
 
 int main (int argc, char** argv) {
 	std::string file;
 	std::string os = "Fedora";
 	std::string out;
+	boost::shared_ptr<WriterFactory> factory;
 
 	int c;
 	while ((c = getopt_long (argc, argv, short_options, long_options, NULL)) != -1) {
@@ -39,25 +43,35 @@ int main (int argc, char** argv) {
 				exit (0);
 			break;
 			case 'r': 
-				file = optarg;
+				if (optarg) file = optarg; 
+				std::cout << "file " << file << std::endl;
 			break;
 			case 's':
-				os = optarg;
+				if (optarg) os = optarg;
+				std::cout << "optarg " << optarg << std::endl;
 			break;
 			case 'o': 
-				out = optarg;
+				if (optarg) out = optarg;
+				std::cout << "out " << optarg << std::endl;
+			break;
+			case 't':
+				if (strncmp ("sql", optarg, 3) == 0) factory = boost::shared_ptr<WriterFactory> (new SQLFactory);
+				if (strncmp ("csv", optarg, 3) == 0) factory = boost::shared_ptr<WriterFactory> (new CSVFactory);
+				std::cout << "type " << optarg << std::endl;
 			break;
 		}
 	}
 
-	if (!file.length ()) {
+	if (!file.length () || !factory.get ()) {
 		display_usage ();
 		return 1;
 	}
 
-	SQLFactory factory;
+//	file = "../fedora.repo";
+//	out = "fedora.csv";
+//	factory = boost::shared_ptr<WriterFactory> (new CSVFactory);
 
-	RepoFile repo (file, &factory, out, os);
+	RepoFile repo (file, factory, out, os);
 
 	return 0;
 }

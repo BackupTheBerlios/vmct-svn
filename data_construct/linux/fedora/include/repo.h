@@ -19,19 +19,19 @@ class Repo {
 	std::string repomd;
 	std::vector<std::string> files;
 	std::string os;
-	Writer* writer;
-	WriterFactory* factory;
+	boost::shared_ptr<Writer> writer;
+	boost::shared_ptr<WriterFactory> factory;
 	std::string path;
 
 	friend class RepoFile;
 public:
-	Repo (WriterFactory* f, const std::string& path, const std::string& _os);
+	Repo (boost::shared_ptr<WriterFactory> f, const std::string& path, const std::string& _os);
 	~Repo ();
 };
 
 class RepoFile {
 public:
-	RepoFile (const std::string& file, WriterFactory* f, const std::string& path, const std::string& os);
+	RepoFile (const std::string& file, boost::shared_ptr<WriterFactory> f, const std::string& path, const std::string& os);
 };
 
 

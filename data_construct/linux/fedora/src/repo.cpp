@@ -39,16 +39,15 @@ int check (const char* type) {
         return -1;
 }
 
-Repo::Repo (WriterFactory* f, const std::string& p, const std::string& _os) : factory(f), path(p), os (_os) {
+Repo::Repo (boost::shared_ptr<WriterFactory> f, const std::string& p, const std::string& _os) : factory(f), path(p), os (_os) {
 	writer = factory->createWriter (path);
 }
 
 Repo::~Repo () {
-	delete writer;
 }
 
 // process a .repo file
-RepoFile::RepoFile (const std::string& file, WriterFactory* factory, const std::string& path, const std::string& os) {
+RepoFile::RepoFile (const std::string& file, boost::shared_ptr<WriterFactory> factory, const std::string& path, const std::string& os) {
 	CSimpleIniA ini;
 	ini.LoadFile (file.c_str ());
 	sections_t section;
@@ -106,12 +105,10 @@ int Repo::processRepo (const std::string& repomd) {
 
 	TableInfo info ("os");
 	info.addField ("name");
-	Row* r = factory->createRow (info);
+	boost::shared_ptr<Row> r = factory->createRow (info);
 	r->setValue (0, os);
 	writer->out (r);
 	
-	delete r;
-
 	processPrimary ();
 	processFileList ();
 
@@ -204,7 +201,7 @@ void Repo::processPrimary () {
         pkgInfo.addField ("version");
         pkgInfo.addField ("revision");
 
-	Row* pr = factory->createRow (pkgInfo);
+	boost::shared_ptr<Row> pr = factory->createRow (pkgInfo);
 
 	TableInfo entryInfo ("entry");
 	entryInfo.addField ("name");
@@ -212,14 +209,14 @@ void Repo::processPrimary () {
         entryInfo.addField ("epoch");
         entryInfo.addField ("ver");
 
-	Row* er = factory->createRow (entryInfo);
+	boost::shared_ptr<Row> er = factory->createRow (entryInfo);
 
 	TableInfo relInfo ("relation");
 	relInfo.addField ("type");
         relInfo.addField ("package");
         relInfo.addField ("entry");
 
-	Row* rr = factory->createRow (relInfo);
+	boost::shared_ptr<Row> rr = factory->createRow (relInfo);
 
 	xmlNode *el = xmlDocGetRootElement(doc); // metadata
 	for (el = el->children; el; el = el->next) {
@@ -285,10 +282,6 @@ void Repo::processPrimary () {
                 }
 	}
 
-	delete rr;
-	delete er;
-	delete pr;
-
 	xmlFreeDoc(doc);
 }
 
@@ -305,7 +298,7 @@ void Repo::processFileList () {
 	fileInfo.addField ("package");
         fileInfo.addField ("name");
 
-	Row* fr = factory->createRow (fileInfo);
+	boost::shared_ptr<Row> fr = factory->createRow (fileInfo);
 
 	xmlNode *el = xmlDocGetRootElement(doc); // filelists
 	for (el = el->children; el; el = el->next) {
@@ -324,8 +317,6 @@ void Repo::processFileList () {
 			}
 		}
 	}
-
-	delete fr;
 
 	xmlFreeDoc(doc);
 }
